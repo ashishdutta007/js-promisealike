@@ -46,13 +46,14 @@ export default class PromiseAlike {
     return controlledPromise;
   }
 
-  catch() {}
+  catch(catchFn) {
+    return this.then(undefined, catchFn);
+  }
 
   finally() {}
 
   // resolve(100)
   _onFulfilled(value) {
-    // console.log(`Resolved with value ${value}`);
     if (this._state === states.PENDING) {
       // on calling resolve(100) update the current promise object's value
       this._state = states.FULFILLED;
@@ -87,11 +88,27 @@ export default class PromiseAlike {
         }
       } else {
         // no fulfilledFn provided
-        controlledPromise._onFulfilled(this._value);
+        return controlledPromise._onFulfilled(this._value);
       }
     });
     this._thenQueue = [];
   }
 
-  _propagateRejected() {}
+  _propagateRejected() {
+    this._thenQueue.forEach(([controlledPromise, _, catchFn]) => {
+      if (typeof catchFn == "function") {
+        const valOrPromise = catchFn(this._rejectReason);
+        if (isThenable(valOrPromise)) {
+          valOrPromise.then(
+            val => controlledPromise._onFulfilled(val),
+            reject => controlledPromise._onRejected(reject)
+          );
+        } else {
+          controlledPromise._onFulfilled(valOrPromise);
+        }
+      } else {
+        return controlledPromise._onRejected(this._rejectReason);
+      }
+    });
+  }
 }
