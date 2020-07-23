@@ -35,6 +35,7 @@ class PromiseAlike {
   then(fulfilledFn, catchFn) {
     // promise that will not be resolved immediately and will be in pending state
     const controlledPromise = new PromiseAlike();
+    //register the then handlers for current promise
     this._thenQueue.push([controlledPromise, fulfilledFn, catchFn]);
 
     // to update the downstream promise objects the current promise needs to be SETTLED
@@ -52,13 +53,14 @@ class PromiseAlike {
 
   finally() {}
 
+  // resolve(100)
   _onFulfilled(value) {
-    // this keyword here will always point to current promise object
     console.log(`Resolved with value ${value}`);
     if (this._state === states.PENDING) {
-      // on calling resolve(1) update the current promise object's value
+      // on calling resolve(100) update the current promise object's value
       this._state = states.FULFILLED;
       this._value = value;
+      // communicate resolution to then handlers
       this._propagateFulfilled();
     }
   }
