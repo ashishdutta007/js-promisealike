@@ -55,7 +55,6 @@ export default class PromiseAlike {
   // resolve(100)
   _onFulfilled(value) {
     if (this._state === states.PENDING) {
-      // on calling resolve(100) update the current promise object's value
       this._state = states.FULFILLED;
       this._value = value;
       // communicate resolution to then handlers
@@ -63,6 +62,7 @@ export default class PromiseAlike {
     }
   }
 
+  // reject('Error')
   _onRejected(reason) {
     if (this._state === states.PENDING) {
       this._state = states.REJECTED;
