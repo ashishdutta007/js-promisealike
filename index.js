@@ -4,6 +4,13 @@ import PromiseAlike from "./PromiseAlike";
 PromiseAlike.resolve = value => new PromiseAlike(resolve => resolve(value));
 PromiseAlike.reject = err => new PromiseAlike((_, reject) => reject(err));
 
+const promise = new PromiseAlike((resolve, reject) => {
+  setTimeout(() => {
+    resolve(100);
+  });
+  throw new Error("Error is thrown");
+});
+
 const firstCtrlPrmsThen = promise
   .then(val => {
     console.log("Resolved value 1", val);

@@ -24,7 +24,10 @@ export default class PromiseAlike {
       setTimeout(() => {
         try {
           executor(this._onFulfilled.bind(this), this._onRejected.bind(this));
-        } catch (ex) {}
+        } catch (ex) {
+          // if error in executor
+          this._onRejected(ex);
+        }
       }, 0);
     }
   }
