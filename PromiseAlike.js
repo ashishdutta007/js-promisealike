@@ -53,7 +53,18 @@ export default class PromiseAlike {
     return this.then(undefined, catchFn);
   }
 
-  finally() {}
+  finally(sideEffectFn) {
+    if (this._state !== states.PENDING) {
+      sideEffectFn();
+      return this.state === states.FULFILLED
+        ? PromiseAlike.resolve(this._value)
+        : PromiseAlike.reject(this._rejectReason);
+    }
+    const controlledPromise = new PromiseAlike();
+    this._finallyQueue.push([controlledPromise, sideEffectFn]);
+
+    return controlledPromise;
+  }
 
   // resolve(100)
   _onFulfilled(value) {
@@ -74,7 +85,7 @@ export default class PromiseAlike {
     }
   }
 
-  // to communicate with the dependent promises in _thenQueue, the value of "this" promise
+  // to communicate with the dependent promises in _thenQueue on resolve()
   _propagateFulfilled() {
     this._thenQueue.forEach(([controlledPromise, fulfilledFn]) => {
       if (typeof fulfilledFn === "function") {
@@ -90,13 +101,20 @@ export default class PromiseAlike {
           controlledPromise._onFulfilled(valueOrPromise);
         }
       } else {
-        // no fulfilledFn provided
+        // if no fulfilledFn provided
         return controlledPromise._onFulfilled(this._value);
       }
     });
+    this._finallyQueue.forEach(([controlledPromise, sideEffectFn]) => {
+      sideEffectFn();
+      controlledPromise._onFulfilled(this._value);
+    });
+
     this._thenQueue = [];
+    this._finallyQueue = [];
   }
 
+  // to communicate with the dependent promises in _thenQueue on reject()
   _propagateRejected() {
     this._thenQueue.forEach(([controlledPromise, _, catchFn]) => {
       if (typeof catchFn == "function") {
@@ -113,5 +131,13 @@ export default class PromiseAlike {
         return controlledPromise._onRejected(this._rejectReason);
       }
     });
+
+    this._finallyQueue.forEach(([controlledPromise, sideEffectFn]) => {
+      sideEffectFn();
+      controlledPromise._onRejected(this._value);
+    });
+
+    this._thenQueue = [];
+    this._finallyQueue = [];
   }
 }

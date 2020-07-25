@@ -7,6 +7,7 @@ PromiseAlike.reject = err => new PromiseAlike((_, reject) => reject(err));
 const promise = new PromiseAlike((resolve, reject) => {
   setTimeout(() => {
     resolve(100);
+    reject("Error Status 500");
   });
   throw new Error("Error is thrown");
 });
