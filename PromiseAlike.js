@@ -8,7 +8,8 @@ const isThenable = mayBePromise => {
   return mayBePromise && typeof mayBePromise.then === "function";
 };
 
-export default class PromiseAlike {
+// export default class PromiseAlike {
+class PromiseAlike {
   constructor(executor) {
     // initial state & values
     this._state = states.PENDING;
@@ -140,4 +141,7 @@ export default class PromiseAlike {
     this._thenQueue = [];
     this._finallyQueue = [];
   }
-}
+};
+
+
+module.exports = { PromiseAlike };
